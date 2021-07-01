@@ -1,4 +1,5 @@
 using System;
+using System.Reflection.Emit;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -17,6 +18,7 @@ namespace UpgradablePan
 		public static IMonitor M = null;
 		public static Texture2D panIcons = null;
 		public static Texture2D panSprites = null;
+		public static DynamicMethod actionWhenPurchasedOriginal = null;
 
 		/*********
 		** Public methods
@@ -153,6 +155,9 @@ namespace UpgradablePan
 			// Patch the item's can be trashed method to disable throwing pans away.
 			harmony.Patch(original: AccessTools.Method(typeof(StardewValley.Item), nameof(StardewValley.Item.canBeTrashed)),
 						  prefix: new HarmonyMethod(typeof(ItemPatches), nameof(ItemPatches.canBeTrashed_Prefix)));
+
+			// Get a copy of the actionWhenPurchased method prior to patching so we can call it without causing a stack overflow.
+			actionWhenPurchasedOriginal = harmony.Patch(AccessTools.Method(typeof(StardewValley.Item), nameof(StardewValley.Item.actionWhenPurchased)));
 
 			// Patch the tool's upgrade purchase method to allow proper pan upgrading functionality.
 			harmony.Patch(original: AccessTools.Method(typeof(StardewValley.Tool), nameof(StardewValley.Tool.actionWhenPurchased)),
