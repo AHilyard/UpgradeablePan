@@ -6,8 +6,8 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using StardewValley.Objects;
 using StardewValley.Tools;
-using StardewValley.TerrainFeatures;
 using Harmony;
 
 namespace UpgradablePan
@@ -182,6 +182,40 @@ namespace UpgradablePan
 						  postfix: new HarmonyMethod(typeof(FarmerRendererPatches), nameof(FarmerRendererPatches.draw_Postfix)));
 			
 			helper.ConsoleCommands.Add("spawnpanpoint", "Spawns a \"shiny spot\" at the current location for panning.\n\nUsage: spawnpanpoint", SpawnPanPointCommand);
+
+			// Save handlers to prevent custom objects from being saved to file.
+			helper.Events.GameLoop.Saving += (s, e) => makePlaceholderHat();
+			helper.Events.GameLoop.Saved += (s, e) => restorePlaceholderHat();
+			helper.Events.GameLoop.SaveLoaded += (s, e) => restorePlaceholderHat();
+		}
+
+		/// <summary>Replaces all instances of PanHat with a placeholder.</summary>
+		private void makePlaceholderHat()
+		{
+			if (Game1.player?.hat?.Value != null && Game1.player.hat.Value is PanHat panHat)
+			{
+				Hat placeholder = new Hat(71);
+				placeholder.Name = $"PanHat({panHat.UpgradeLevel})";
+				Game1.player.hat.Set(placeholder);
+			}
+		}
+
+		/// <summary>Replaces a placeholder object with its PanHat counterpart.</summary>
+		private void restorePlaceholderHat()
+		{
+			if (Game1.player?.hat?.Value != null)
+			{
+				string xmlString = Game1.player.hat.Value.Name;
+				if (xmlString.StartsWith("PanHat("))
+				{
+					int upgradeLevel = int.Parse(xmlString.Substring("PanHat(".Length, 1));
+					Pan pan = new Pan();
+					pan.UpgradeLevel = upgradeLevel;
+
+					PanHat panHat = new PanHat(pan);
+					Game1.player.hat.Set(panHat);
+				}
+			}
 		}
 
 
