@@ -1,6 +1,7 @@
 using StardewValley;
 using StardewValley.Tools;
 using StardewValley.Menus;
+using StardewValley.Objects;
 using Microsoft.Xna.Framework.Input;
 
 namespace UpgradablePan
@@ -37,7 +38,7 @@ namespace UpgradablePan
 						// Equipping
 						else if (Game1.player.CursorSlotItem is Pan pan && pan.UpgradeLevel > 1)
 						{
-							Game1.player.CursorSlotItem = null;
+							Game1.player.CursorSlotItem = Utility.PerformSpecialItemGrabReplacement(Game1.player.hat.Value);
 							Game1.player.hat.Value = new PanHat(pan);
 							Game1.playSound("grassyStep");
 
@@ -73,16 +74,26 @@ namespace UpgradablePan
 						__instance.inventory.leftClick(x, y, null, false);
 						pan.NetFields.Parent = null;
 						
-						if (Game1.player.hat.Value == null)
+						if (Game1.player.hat.Value != null)
+						{
+							Game1.player.items[inventorySlot] = Utility.PerformSpecialItemGrabReplacement(Game1.player.hat.Value);
+						}
+
+						if (pan.UpgradeLevel > 1)
 						{
 							Game1.player.hat.Value = new PanHat(pan);
 							Game1.playSound("grassyStep");
-
-							// Hack to allow compatibility with WearMoreRings mod.
-							Game1.exitActiveMenu();
-							Game1.activeClickableMenu = new GameMenu(false);
-							performedSpecialFunctionality = true;
 						}
+						else
+						{
+							Game1.player.hat.Value = new Hat(71);
+							Game1.playSound("grassyStep");
+						}
+
+						// Hack to allow compatibility with WearMoreRings mod.
+						Game1.exitActiveMenu();
+						Game1.activeClickableMenu = new GameMenu(false);
+						performedSpecialFunctionality = true;
 					}
 				}
 
